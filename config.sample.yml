@@ -1,0 +1,33 @@
+auth:
+  steam:
+    apiKey: 'notAKey'
+serverData:
+  welcomeText: |
+    <style>.screepsplus h1{  text-align: center; }</style>
+    <div class="screepsplus">
+    <h1>ScreepsPlus</h1>
+    Wecome to the ScreepsPlus private server.<br>
+    Mods include screepsmod-auth and several custom mods to enable email notifications, control tickrate, power banks, portals, and other internal improvements.<br><br>
+    <div style="text-align: center">
+    This server is funded by backers on Patreon. <br>
+    <a target="_blank" href="https://www.patreon.com/bePatron?u=6867142" ><img src="https://c5.patreon.com/external/logo/become_a_patron_button.png"></a>
+    </div>
+  historyChunkSize: 20
+  socketUpdateThrottle: 1000
+shards:
+- name: 'testShard0'
+  assets:
+    dir: test-server/assets
+  mongo: 
+    uri: mongodb://localhost:27117/shard0
+  redis: 
+    host: localhost
+    port: 6380
+- name: 'testShard1'
+  assets:
+    dir: test-server/assets
+  mongo: 
+    uri: mongodb://localhost:27117/shard1
+  redis: 
+    host: localhost
+    port: 6381
