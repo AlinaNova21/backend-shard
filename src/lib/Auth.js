@@ -91,7 +91,6 @@ class Auth {
   async checkToken (token, noConsume) {
     const authKey = `auth:${token}`
     const id = await this.redis.get(authKey)
-    console.log('Check', token, id)
     if (!id) {
       return false
     }

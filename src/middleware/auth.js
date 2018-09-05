@@ -29,6 +29,7 @@ module.exports = async (fn) => {
     req.authenticate = async (strategy) => {
       const token = req.headers['x-token']
       if (token) {
+        console.log('token', token)
         const user = await req.auth.checkToken(token, true)
         if (user) {
           res.setHeader('x-token', await req.auth.genToken(user._id))

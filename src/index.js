@@ -8,22 +8,20 @@ const YAML = require('yamljs')
 const PROTOCOL = 13
 
 const AuthMiddleware = require('./middleware/auth')
-const SteamMiddleware = require('./middleware/steam')
 
-const { MongoClient, ObjectId } = require('mongodb')
+const { MongoClient } = require('mongodb')
 const { default: serve, send } = require('micro')
 
-const PubSub = require('./PubSub')
+const PubSub = require('./lib/PubSub')
 
 const match = require('fs-router')(path.join(__dirname, '/routes'))
 
 const readFile = util.promisify(fs.readFile)
-let sock
 
-async function setup (fn) {
+async function setup () {
   const config = YAML.parse(await readFile('./config.yml', 'utf8'))
 
-  const shards = await Promise.all(config.shards.map(async config => {
+  const shardArray = await Promise.all(config.shards.map(async config => {
     const redisClient = Redis.createClient(config.redis)
     const pub = Redis.createClient(config.redis)
     const sub = Redis.createClient(config.redis)
@@ -42,13 +40,17 @@ async function setup (fn) {
     }
     return { config, redis, pubsub, mongo, db: await mongo.db() }
   }))
+  const shards = shardArray.reduce((l, v) => { l[v.config.name] = v; return l }, {})
+  shards.common = shardArray[0]
+  return {
+    config,
+    shards
+  }
+}
 
+async function base (fn, config, shards) {
   return async (req, res) => {
     req.PROTOCOL = PROTOCOL
-    req.sock = sock
-    req.config = config
-    req.shards = shards.reduce((l, v) => { l[v.config.name] = v; return l }, {})
-    req.shards.common = shards[0]
     res.error = (error, code = 200) => send(res, code, { error })
     return fn(req, res)
   }
@@ -56,7 +58,7 @@ async function setup (fn) {
 
 const middleware = [
   AuthMiddleware,
-  setup
+  base
 ]
 
 async function runMiddleware (fn) {
@@ -67,7 +69,7 @@ async function runMiddleware (fn) {
   return ret
 }
 
-module.exports = runMiddleware(async (req, res) => {
+const mainHandler = runMiddleware(async (req, res) => {
   const start = Date.now()
   const matched = match(req)
   if (matched) {
@@ -88,11 +90,19 @@ module.exports = runMiddleware(async (req, res) => {
 })
 
 async function run () {
-  const handler = await module.exports
-  const server = serve(handler)
-  sock = sockjs.createServer()
+  const { shards, config } = await setup()
+  const handler = async (fn) => {
+    return (req, res) => {
+      req.sock = sock
+      req.config = config
+      req.shards = shards
+      return fn(req, res)
+    }
+  }
+  const sock = sockjs.createServer()
+  const server = serve(await handler(await mainHandler))
   sock.installHandlers(server, { prefix: '/socket' })
-  require('./socket')(sock, PROTOCOL)
+  require('./socket')(sock, PROTOCOL, shards, config)
   const { HOST = '0.0.0.0', PORT = 3000 } = process.env
   server.listen(parseInt(PORT), () => console.log(`Listening on ${HOST}:${PORT}`))
 }
