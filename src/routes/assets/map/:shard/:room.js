@@ -6,7 +6,13 @@ const axios = require('axios')
 const readFile = util.promisify(fs.readFile)
 
 module.exports.GET = async (req, res) => {
-  const { shard, room } = req.params
+	let [,,, shard, zoom, room ] = req.url.split('/')
+	if (room) {
+		room = `${zoom}/${room}`
+	} else {
+		room = zoom
+	}
+	room = room.split('?')[0]
   try {
     const { dir, http } = req.shards[shard].config.assets
     if (dir) {
@@ -20,3 +26,5 @@ module.exports.GET = async (req, res) => {
     return res.error('not found', 404)
   }
 }
+
+module.exports.path = '/assets/map/.*/?.*'

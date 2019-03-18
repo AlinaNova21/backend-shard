@@ -14,7 +14,7 @@ module.exports = async function ({ conns, shards, config }) {
           })
         })
         const roomsToFetch = Object.keys(rooms)
-        console.log('fetching', roomsToFetch.length)
+        // console.log('fetching', roomsToFetch.length)
         if (!roomsToFetch.length) return
         const data = await redis.mget(roomsToFetch.map(r => `mapView:${r}`))
         for (const index in data) {

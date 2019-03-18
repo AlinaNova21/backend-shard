@@ -75,8 +75,8 @@ const mainHandler = runMiddleware(async (req, res) => {
   if (matched) {
     const ret = await matched(req, res)
     const dur = Date.now() - start
+    console.log(`${req.method} ${req.url} ${dur}ms ${res.statusCode}`)
     if (req.url.startsWith('/api')) {
-      console.log(`${req.method} ${req.url} ${dur}ms ${res.statusCode}`)
       console.log(ret)
       if (typeof ret === 'object' && !ret.error) {
         ret.ok = 1

@@ -11,7 +11,7 @@ module.exports.POST = async (req, res) => {
   const stats = {}
   const userIDs = new Set()
 
-  const { db, redis } = req.shards[shard]
+  const { db, redis } = req.shards[shard] || {}
 
   if (!db || !redis) {
     return res.error('invalid shard')

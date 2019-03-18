@@ -26,7 +26,7 @@ module.exports.POST = async (req, res) => {
     return res.error('branch does not exist')
   }
   await redis.del(`scrScriptCachedData:${user._id}`)
-  const code = await userCode.findOne(query).exec()
+  const code = await userCode.findOne(query)
   pubsub.publish(`user:${user._id}/code`, JSON.stringify({ id: '' + code._id, hash: body._hash }))
   return { timestamp: Date.now() }
 }
@@ -40,7 +40,7 @@ module.exports.GET = async (req, res) => {
   const { db } = req.shards.common
   const userCode = db.collection('users.code')
 
-  const data = userCode.findOne(query).exec()
+  const data = userCode.findOne(query)
   if (!data) {
     return res.error('no code')
   }

@@ -7,7 +7,8 @@ module.exports = async (server, PROTOCOL, shards, config) => {
   const conns = new Set()
   const moduleOpts = { conns, shards, config }
   const modules = {
-    roomMap2: await require('./channels/roomMap2')(moduleOpts)
+    roomMap2: await require('./channels/roomMap2')(moduleOpts),
+    room: await require('./channels/room')(moduleOpts),
   }
 
   for (const { name } of config.shards) {
@@ -79,7 +80,7 @@ module.exports = async (server, PROTOCOL, shards, config) => {
       conns.delete(conn)
     })
     conn.publish = (channel, data) => {
-      console.log(channel, data)
+      // console.log(channel, data)
       conn.write(JSON.stringify([channel, data]))
     }
 
